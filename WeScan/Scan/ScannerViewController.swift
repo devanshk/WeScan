@@ -50,12 +50,8 @@ final class ScannerViewController: UIViewController {
         let toolbar = UIToolbar()
         toolbar.barStyle = .blackTranslucent
         toolbar.tintColor = .white
-        toolbar.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: 44)
+        toolbar.translatesAutoresizingMaskIntoConstraints = false
         return toolbar
-    }()
-    
-    lazy private var autoScanButton: UIBarButtonItem = {
-        return UIBarButtonItem(title: NSLocalizedString("wescan.scanning.auto", tableName: nil, bundle: Bundle(for: ScannerViewController.self), value: "Auto", comment: "The auto button state"), style: .plain, target: self, action: #selector(toggleAutoScan))
     }()
     
     lazy private var flashButton: UIBarButtonItem = {
@@ -72,7 +68,7 @@ final class ScannerViewController: UIViewController {
     }()
 
     // MARK: - Life Cycle
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -127,7 +123,8 @@ final class ScannerViewController: UIViewController {
     private func setupToolbar() {
         let fixedSpace = UIBarButtonItem(barButtonSystemItem: .fixedSpace, target: nil, action: nil)
         let flexibleSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
-        toolbar.setItems([fixedSpace, flashButton, flexibleSpace, autoScanButton, fixedSpace], animated: false)
+        let title = UIBarButtonItem(title: "Scan a Poster", style: .plain, target: self, action: nil)
+        toolbar.setItems([fixedSpace, flashButton, flexibleSpace, title, flexibleSpace], animated: false)
         
         if UIImagePickerController.isFlashAvailable(for: .rear) == false {
             let flashOffImage = UIImage(named: "flashUnavailable", in: Bundle(for: ScannerViewController.self), compatibleWith: nil)
@@ -137,42 +134,69 @@ final class ScannerViewController: UIViewController {
     }
     
     private func setupConstraints() {
-        let quadViewConstraints = [
+        var toolbarConstraints = [NSLayoutConstraint]()
+        var quadViewConstraints = [NSLayoutConstraint]()
+        var cancelButtonConstraints = [NSLayoutConstraint]()
+        var shutterButtonConstraints = [NSLayoutConstraint]()
+        var activityIndicatorConstraints = [NSLayoutConstraint]()
+        
+        quadViewConstraints = [
             quadView.topAnchor.constraint(equalTo: view.topAnchor),
             view.bottomAnchor.constraint(equalTo: quadView.bottomAnchor),
             view.trailingAnchor.constraint(equalTo: quadView.trailingAnchor),
             quadView.leadingAnchor.constraint(equalTo: view.leadingAnchor)
         ]
         
-        var cancelButtonBottomConstraint: NSLayoutConstraint
-        var shutterButtonBottomConstraint: NSLayoutConstraint
-        
-        if #available(iOS 11.0, *) {
-            cancelButtonBottomConstraint = view.safeAreaLayoutGuide.bottomAnchor.constraint(equalTo: cancelButton.bottomAnchor, constant: (65.0 / 2) - 10.0)
-            shutterButtonBottomConstraint = view.safeAreaLayoutGuide.bottomAnchor.constraint(equalTo: shutterButton.bottomAnchor, constant: 8.0)
-        } else {
-            cancelButtonBottomConstraint = view.bottomAnchor.constraint(equalTo: cancelButton.bottomAnchor, constant: (65.0 / 2) - 10.0)
-            shutterButtonBottomConstraint = view.bottomAnchor.constraint(equalTo: shutterButton.bottomAnchor, constant: 8.0)
-        }
-        
-        let cancelButtonConstraints = [
-            cancelButton.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 24.0),
-            cancelButtonBottomConstraint
-            ]
-        
-        let shutterButtonConstraints = [
+        shutterButtonConstraints = [
             shutterButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            shutterButtonBottomConstraint,
             shutterButton.widthAnchor.constraint(equalToConstant: 65.0),
             shutterButton.heightAnchor.constraint(equalToConstant: 65.0)
-            ]
+        ]
         
-        let activityIndicatorConstraints = [
+        activityIndicatorConstraints = [
             activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         ]
         
-        NSLayoutConstraint.activate(quadViewConstraints + cancelButtonConstraints + shutterButtonConstraints + activityIndicatorConstraints)
+        if #available(iOS 11.0, *) {
+            let window = UIApplication.shared.keyWindow
+            
+            toolbarConstraints = [
+                toolbar.widthAnchor.constraint(equalTo: view.widthAnchor),
+                toolbar.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
+                toolbar.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+                toolbar.topAnchor.constraint(equalTo: view.topAnchor)
+            ]
+            
+            if let safeAreaInsets = window?.safeAreaInsets {
+                toolbarConstraints.append(toolbar.heightAnchor.constraint(equalToConstant: safeAreaInsets.top + 44.0))
+            }
+            
+            cancelButtonConstraints = [
+                cancelButton.leftAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leftAnchor, constant: 24.0),
+                view.safeAreaLayoutGuide.bottomAnchor.constraint(equalTo: cancelButton.bottomAnchor, constant: (65.0 / 2) - 10.0)
+            ]
+            
+            let shutterButtonBottomConstraint = view.safeAreaLayoutGuide.bottomAnchor.constraint(equalTo: shutterButton.bottomAnchor, constant: 8.0)
+            shutterButtonConstraints.append(shutterButtonBottomConstraint)
+        } else {
+            toolbarConstraints = [
+                toolbar.widthAnchor.constraint(equalTo: view.widthAnchor),
+                toolbar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+                toolbar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+                toolbar.topAnchor.constraint(equalTo: view.topAnchor)
+            ]
+            
+            cancelButtonConstraints = [
+                cancelButton.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 24.0),
+                view.bottomAnchor.constraint(equalTo: cancelButton.bottomAnchor, constant: (65.0 / 2) - 10.0)
+            ]
+            
+            let shutterButtonBottomConstraint = view.bottomAnchor.constraint(equalTo: shutterButton.bottomAnchor, constant: 8.0)
+            shutterButtonConstraints.append(shutterButtonBottomConstraint)
+        }
+        
+        NSLayoutConstraint.activate(quadViewConstraints + cancelButtonConstraints + shutterButtonConstraints + activityIndicatorConstraints + toolbarConstraints)
     }
     
     // MARK: - Actions
@@ -181,16 +205,6 @@ final class ScannerViewController: UIViewController {
         (navigationController as? ImageScannerController)?.flashToBlack()
         shutterButton.isUserInteractionEnabled = false
         captureSessionManager?.capturePhoto()
-    }
-    
-    @objc private func toggleAutoScan() {
-        if CaptureSession.current.autoScanEnabled {
-            CaptureSession.current.autoScanEnabled = false
-            autoScanButton.title = NSLocalizedString("wescan.scanning.manual", tableName: nil, bundle: Bundle(for: ScannerViewController.self), value: "Manual", comment: "The manual button state")
-        } else {
-            CaptureSession.current.autoScanEnabled = true
-            autoScanButton.title = NSLocalizedString("wescan.scanning.auto", tableName: nil, bundle: Bundle(for: ScannerViewController.self), value: "Auto", comment: "The auto button state")
-        }
     }
     
     @objc private func toggleFlash() {
@@ -227,6 +241,7 @@ extension ScannerViewController: RectangleDetectionDelegateProtocol {
     func captureSessionManager(_ captureSessionManager: CaptureSessionManager, didFailWithError error: Error) {
         
         activityIndicator.stopAnimating()
+        captureSessionManager.start()
         shutterButton.isUserInteractionEnabled = true
         
         guard let imageScannerController = navigationController as? ImageScannerController else { return }
@@ -236,10 +251,12 @@ extension ScannerViewController: RectangleDetectionDelegateProtocol {
     func didStartCapturingPicture(for captureSessionManager: CaptureSessionManager) {
         activityIndicator.startAnimating()
         shutterButton.isUserInteractionEnabled = false
+        captureSessionManager.stop()
     }
     
     func captureSessionManager(_ captureSessionManager: CaptureSessionManager, didCapturePicture picture: UIImage, withQuad quad: Quadrilateral?) {
         activityIndicator.stopAnimating()
+        captureSessionManager.start()
         
         let editVC = EditScanViewController(image: picture, quad: quad)
         navigationController?.pushViewController(editVC, animated: false)

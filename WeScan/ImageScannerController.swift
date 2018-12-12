@@ -50,6 +50,7 @@ public final class ImageScannerController: UINavigationController {
     /// A black UIView, used to quickly display a black screen when the shutter button is presseed.
     internal let blackFlashView: UIView = {
         let view = UIView()
+//        view.backgroundColor = UIColor(red: 106/255.0, green: 43/255.0, blue: 166/255.0, alpha: 0.5)
         view.backgroundColor = UIColor(white: 0.0, alpha: 0.5)
         view.isHidden = true
         view.translatesAutoresizingMaskIntoConstraints = false
