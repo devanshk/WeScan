@@ -67,10 +67,10 @@ final class ReviewViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        // We only show the toolbar (with the enhance button) if the enhanced image is available.
-        if enhancedImageIsAvailable {
-            navigationController?.setToolbarHidden(false, animated: true)
-        }
+//        // We only show the toolbar (with the enhance button) if the enhanced image is available.
+//        if enhancedImageIsAvailable {
+//            navigationController?.setToolbarHidden(false, animated: true)
+//        }
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -89,8 +89,8 @@ final class ReviewViewController: UIViewController {
         
         navigationController?.toolbar.barStyle = .blackTranslucent
         
-        let fixedSpace = UIBarButtonItem(barButtonSystemItem: .fixedSpace, target: nil, action: nil)
-        toolbarItems = [fixedSpace, enhanceButton]
+//        let fixedSpace = UIBarButtonItem(barButtonSystemItem: .fixedSpace, target: nil, action: nil)
+        toolbarItems = []
     }
     
     private func setupConstraints() {

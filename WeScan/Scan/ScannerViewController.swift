@@ -54,10 +54,6 @@ final class ScannerViewController: UIViewController {
         return toolbar
     }()
     
-    lazy private var autoScanButton: UIBarButtonItem = {
-        return UIBarButtonItem(title: NSLocalizedString("wescan.scanning.auto", tableName: nil, bundle: Bundle(for: ScannerViewController.self), value: "Auto", comment: "The auto button state"), style: .plain, target: self, action: #selector(toggleAutoScan))
-    }()
-    
     lazy private var flashButton: UIBarButtonItem = {
         let flashImage = UIImage(named: "flash", in: Bundle(for: ScannerViewController.self), compatibleWith: nil)
         let flashButton = UIBarButtonItem(image: flashImage, style: .plain, target: self, action: #selector(toggleFlash))
@@ -127,7 +123,8 @@ final class ScannerViewController: UIViewController {
     private func setupToolbar() {
         let fixedSpace = UIBarButtonItem(barButtonSystemItem: .fixedSpace, target: nil, action: nil)
         let flexibleSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
-        toolbar.setItems([fixedSpace, flashButton, flexibleSpace, autoScanButton, fixedSpace], animated: false)
+        let title = UIBarButtonItem(title: "Scan a Poster", style: .plain, target: self, action: nil)
+        toolbar.setItems([fixedSpace, flashButton, flexibleSpace, title, flexibleSpace], animated: false)
         
         if UIImagePickerController.isFlashAvailable(for: .rear) == false {
             let flashOffImage = UIImage(named: "flashUnavailable", in: Bundle(for: ScannerViewController.self), compatibleWith: nil)
@@ -210,16 +207,6 @@ final class ScannerViewController: UIViewController {
         captureSessionManager?.capturePhoto()
     }
     
-    @objc private func toggleAutoScan() {
-        if CaptureSession.current.autoScanEnabled {
-            CaptureSession.current.autoScanEnabled = false
-            autoScanButton.title = NSLocalizedString("wescan.scanning.manual", tableName: nil, bundle: Bundle(for: ScannerViewController.self), value: "Manual", comment: "The manual button state")
-        } else {
-            CaptureSession.current.autoScanEnabled = true
-            autoScanButton.title = NSLocalizedString("wescan.scanning.auto", tableName: nil, bundle: Bundle(for: ScannerViewController.self), value: "Auto", comment: "The auto button state")
-        }
-    }
-    
     @objc private func toggleFlash() {
         guard UIImagePickerController.isFlashAvailable(for: .rear) else { return }
         
@@ -254,6 +241,7 @@ extension ScannerViewController: RectangleDetectionDelegateProtocol {
     func captureSessionManager(_ captureSessionManager: CaptureSessionManager, didFailWithError error: Error) {
         
         activityIndicator.stopAnimating()
+        captureSessionManager.start()
         shutterButton.isUserInteractionEnabled = true
         
         guard let imageScannerController = navigationController as? ImageScannerController else { return }
@@ -263,10 +251,12 @@ extension ScannerViewController: RectangleDetectionDelegateProtocol {
     func didStartCapturingPicture(for captureSessionManager: CaptureSessionManager) {
         activityIndicator.startAnimating()
         shutterButton.isUserInteractionEnabled = false
+        captureSessionManager.stop()
     }
     
     func captureSessionManager(_ captureSessionManager: CaptureSessionManager, didCapturePicture picture: UIImage, withQuad quad: Quadrilateral?) {
         activityIndicator.stopAnimating()
+        captureSessionManager.start()
         
         let editVC = EditScanViewController(image: picture, quad: quad)
         navigationController?.pushViewController(editVC, animated: false)
